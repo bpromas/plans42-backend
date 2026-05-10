@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { comments } from 'src/db/schema';
+import { comments, posts, users } from 'src/db/schema';
 
 @Injectable()
 export class CommentsService {
@@ -14,6 +14,21 @@ export class CommentsService {
   ) {}
 
   async create(createCommentDto: CreateCommentDto) {
+
+    // Validate creatorId exists
+    const [creator] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, createCommentDto.creatorId));
+    if (!creator) throw new NotFoundException(`User #${createCommentDto.creatorId} not found`);
+
+    // Validate spaceId exists
+    const [post] = await this.db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(eq(posts.id, createCommentDto.postId));
+    if (!post) throw new NotFoundException(`Post #${createCommentDto.postId} not found`);
+    
     const [comment] = await this.db
       .insert(comments)
       .values(createCommentDto)

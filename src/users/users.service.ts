@@ -5,6 +5,7 @@ import * as schema from '../db/schema';
 import { users } from '../db/schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +24,11 @@ export class UsersService {
 
     const [user] = await this.db
       .insert(users)
-      .values(createUserDto)
+      .values({
+          username: createUserDto.username,
+          password: await bcrypt.hash(createUserDto.password, 10),
+          role: createUserDto.role
+        })
       .returning();
     return user;
   }
@@ -53,9 +58,15 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
+
+    const { password, ...rest } = updateUserDto;
     const [user] = await this.db
       .update(users)
-      .set({ ...updateUserDto, updatedAt: new Date() })
+      .set({
+        ...rest,
+        ...(password && { password: await bcrypt.hash(password, 10) }),
+        updatedAt: new Date(),
+      })
       .where(eq(users.id, id))
       .returning();
 

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
+import { CheckOwnership } from 'src/auth/ownership.guard';
 
 @Controller('spaces')
 export class SpacesController {
@@ -23,11 +24,13 @@ export class SpacesController {
   }
 
   @Patch(':id')
+  @CheckOwnership('space')
   update(@Param('id') id: string, @Body() updateSpaceDto: UpdateSpaceDto) {
     return this.spacesService.update(+id, updateSpaceDto);
   }
 
   @Delete(':id')
+  @CheckOwnership('space')
   remove(@Param('id') id: string) {
     return this.spacesService.remove(+id);
   }

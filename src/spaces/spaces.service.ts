@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
-import { spaces } from 'src/db/schema';
+import { spaces, users } from 'src/db/schema';
 
 @Injectable()
 export class SpacesService {
@@ -14,12 +14,25 @@ export class SpacesService {
   ) {}
 
   async create(createSpaceDto: CreateSpaceDto) {
-    const [space] = await this.db
-      .insert(spaces)
-      .values(createSpaceDto)
-      .returning();
-    return space;
+  // Validate creatorId exists
+  const [creator] = await this.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, createSpaceDto.creatorId));
+  if (!creator) throw new NotFoundException(`User #${createSpaceDto.creatorId} not found`);
+
+  // Validate guestId if provided
+  if (createSpaceDto.guestId) {
+    const [guest] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, createSpaceDto.guestId));
+    if (!guest) throw new NotFoundException(`User #${createSpaceDto.guestId} not found`);
   }
+
+  const [space] = await this.db.insert(spaces).values(createSpaceDto).returning();
+  return space;
+}
 
   async findAll() {
     return this.db.select({

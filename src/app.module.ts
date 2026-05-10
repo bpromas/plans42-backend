@@ -14,10 +14,19 @@ import { CommentsController } from './comments/comments.controller';
 import { SpacesService } from './spaces/spaces.service';
 import { PostsService } from './posts/posts.service';
 import { CommentsService } from './comments/comments.service';
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { RolesGuard } from './auth/roles.guard';
+import { OwnershipGuard } from './auth/ownership.guard';
 
 @Module({
-  imports: [DbModule, UsersModule, SpacesModule, PostsModule, CommentsModule],
+  imports: [DbModule, AuthModule, UsersModule, SpacesModule, PostsModule, CommentsModule],
   controllers: [AppController, UsersController, SpacesController, PostsController, CommentsController],
-  providers: [AppService, UsersService, SpacesService, PostsService, CommentsService],
+  providers: [
+    { provide: APP_GUARD, useClass: JwtAuthGuard },   // 1st: verify token
+    { provide: APP_GUARD, useClass: RolesGuard },     // 2nd: check role
+    { provide: APP_GUARD, useClass: OwnershipGuard }, // 3rd: check ownership
+    AppService, UsersService, SpacesService, PostsService, CommentsService],
 })
 export class AppModule {}

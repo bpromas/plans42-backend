@@ -1,5 +1,6 @@
 import { db } from './index';
 import { users } from './schema';
+import bcrypt from 'bcrypt';
 import 'dotenv/config';
 
 async function seed() {
@@ -7,7 +8,8 @@ async function seed() {
 
   await db.insert(users).values({
     username: 'admin',
-    password: 'senha123', // TO-DO: hash this with bcrypt
+    password: await bcrypt.hash('senha123', 10),
+    role: 'admin'
   }).onConflictDoNothing();
 
   console.log('✅ Admin user seeded.');

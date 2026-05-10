@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { CheckOwnership } from 'src/auth/ownership.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -23,11 +24,13 @@ export class PostsController {
   }
 
   @Patch(':id')
+  @CheckOwnership('post')
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
     return this.postsService.update(+id, updatePostDto);
   }
 
   @Delete(':id')
+  @CheckOwnership('post')
   remove(@Param('id') id: string) {
     return this.postsService.remove(+id);
   }

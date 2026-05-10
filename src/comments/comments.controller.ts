@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CheckOwnership } from 'src/auth/ownership.guard';
 
 @Controller('comments')
 export class CommentsController {
@@ -23,11 +24,13 @@ export class CommentsController {
   }
 
   @Patch(':id')
+  @CheckOwnership('comment')
   update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
     return this.commentsService.update(+id, updateCommentDto);
   }
 
   @Delete(':id')
+  @CheckOwnership('comment')
   remove(@Param('id') id: string) {
     return this.commentsService.remove(+id);
   }

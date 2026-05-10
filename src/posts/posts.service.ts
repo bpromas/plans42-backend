@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { posts } from 'src/db/schema';
+import { posts, spaces, users } from 'src/db/schema';
 
 @Injectable()
 export class PostsService {
@@ -14,6 +14,21 @@ export class PostsService {
   ) {}
 
   async create(createPostDto: CreatePostDto) {
+    
+    // Validate creatorId exists
+    const [creator] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, createPostDto.creatorId));
+    if (!creator) throw new NotFoundException(`User #${createPostDto.creatorId} not found`);
+
+    // Validate spaceId exists
+    const [space] = await this.db
+      .select({ id: spaces.id })
+      .from(spaces)
+      .where(eq(spaces.id, createPostDto.spaceId));
+    if (!space) throw new NotFoundException(`Space #${createPostDto.spaceId} not found`);
+
     const [post] = await this.db
       .insert(posts)
       .values(createPostDto)
